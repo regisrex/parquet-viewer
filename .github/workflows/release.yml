@@ -106,4 +106,5 @@ jobs:
             > `xattr -dr com.apple.quarantine "/Applications/Rex's Parquets.app"`
           releaseDraft: ${{ github.event.inputs.draft != 'false' }}
           prerelease: false
+          tauriScript: npx tauri
           args: ${{ matrix.tauri-args }}
