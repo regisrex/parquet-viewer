@@ -68,7 +68,7 @@ jobs:
             patchelf
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install
 
       - name: Type-check frontend
         run: npx tsc --noEmit

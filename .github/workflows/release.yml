@@ -81,7 +81,7 @@ jobs:
 
       # ── Frontend ────────────────────────────────────────────────────────────
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install
 
       # ── Tauri build + GitHub release ────────────────────────────────────────
       - name: Build and publish release
