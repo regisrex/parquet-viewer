@@ -40,7 +40,7 @@ export default function App() {
   useEffect(() => {
     if (activeConnectionId) {
       const conn = connections.find((c) => c.id === activeConnectionId);
-      loadCatalogs(activeConnectionId, conn?.catalog);
+      loadCatalogs(activeConnectionId, conn?.catalog ?? undefined);
       loadHistory(activeConnectionId);
     }
   }, [activeConnectionId]);
