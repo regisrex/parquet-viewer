@@ -34,7 +34,7 @@ jobs:
           - name: Windows x64
             runner: windows-latest
             rust-targets: ''
-            tauri-args: --target x86_64-pc-windows-msvc
+            tauri-args: --target x86_64-pc-windows-msvc --bundles msi
 
           # ── Linux x64 (AppImage + .deb) ────────────────────────────────────
           - name: Linux x64
@@ -98,7 +98,7 @@ jobs:
             | Platform | Installer |
             |---|---|
             | **macOS** (Apple Silicon + Intel) | `Rex's.Parquets_*.dmg` |
-            | **Windows** x64 | `Rex's.Parquets_*_x64-setup.exe` |
+            | **Windows** x64 | `Rex's.Parquets_*_x64_en-US.msi` |
             | **Linux** x64 | `rexs-parquets_*_amd64.AppImage` · `rexs-parquets_*_amd64.deb` |
 
             > **macOS note:** The app is not notarized. On first launch right-click → Open

@@ -26,7 +26,7 @@ jobs:
           - name: Windows
             runner: windows-latest
             rust-targets: ''
-            tauri-args: ''
+            tauri-args: --bundles msi
 
           - name: Linux
             runner: ubuntu-22.04
