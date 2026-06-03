@@ -19,7 +19,7 @@ export default function App() {
   const { loadHistory } = useHistoryStore();
   const { addTab } = useQueryStore();
   const { exploredTable } = useIcebergStore();
-  const { openFile, isLoading: parquetLoading } = useParquetStore();
+  const { tabs: parquetTabs } = useParquetStore();
   const [showConnectionModal, setShowConnectionModal] = useState(false);
 
   // Load connections on mount
@@ -66,7 +66,7 @@ export default function App() {
           </Panel>
           <PanelResizeHandle className="resize-handle" />
           <Panel className="main-panel">
-            {(openFile || parquetLoading) ? (
+            {parquetTabs.length > 0 ? (
               <ParquetViewer />
             ) : exploredTable ? (
               <IcebergExplorer />

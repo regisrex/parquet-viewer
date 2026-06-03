@@ -1154,6 +1154,35 @@ input, select { font-family: var(--font-sans); }
   overflow: hidden;
 }
 
+/* File tab bar (open parquet files) */
+.pq-file-tabbar {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  background: var(--bg-toolbar);
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-height: var(--toolbar-height);
+}
+.pq-file-tabbar::-webkit-scrollbar { display: none; }
+.pq-filetab-name {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Wrapper that fills remaining space after the file tab bar */
+.pq-active-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .pq-viewer--loading,
 .pq-viewer--error {
   justify-content: center;

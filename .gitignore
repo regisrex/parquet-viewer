@@ -9,8 +9,6 @@ src-tauri/target/
 src-tauri/gen/
 
 # Env files
-.env
-.env.*
 
 # OS
 .DS_Store
@@ -21,3 +19,4 @@ Thumbs.db
 .idea/
 *.swp
 .claude/
+config.bat
