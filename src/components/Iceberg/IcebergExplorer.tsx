@@ -4,11 +4,13 @@ import { useIcebergStore } from "../../store/icebergStore";
 import { useConnectionStore } from "../../store/connectionStore";
 import { useSchemaStore } from "../../store/schemaStore";
 import { tauriInvoke } from "../../lib/tauri";
+import { DataGrid } from "../Results/DataGrid";
 import type { QueryResult } from "../../types";
 
-type Tab = "schema" | "snapshots" | "files" | "partitions" | "history" | "sync";
+type Tab = "data" | "schema" | "snapshots" | "files" | "partitions" | "history" | "sync";
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: "data",       label: "Data" },
   { id: "schema",     label: "Schema" },
   { id: "snapshots",  label: "Snapshots" },
   { id: "files",      label: "Files" },
@@ -20,6 +22,8 @@ const TABS: { id: Tab; label: string }[] = [
 function buildQuery(tab: Tab, catalog: string, schema: string, table: string): string {
   const q = (suffix: string) => `"${catalog}"."${schema}"."${table}${suffix}"`;
   switch (tab) {
+    case "data":
+      return `SELECT *\nFROM ${q("")}\nLIMIT 1000`;
     case "schema":
       return `DESCRIBE ${q("")}`;
     case "snapshots":
@@ -407,7 +411,7 @@ function MetaTable({ result }: { result: QueryResult }) {
 export function IcebergExplorer() {
   const { exploredTable, setExploredTable } = useIcebergStore();
   const { activeConnectionId } = useConnectionStore();
-  const [activeTab, setActiveTab] = useState<Tab>("schema");
+  const [activeTab, setActiveTab] = useState<Tab>("data");
   const [results, setResults] = useState<Partial<Record<Tab, QueryResult>>>({});
   const [loading, setLoading] = useState<Tab | null>(null);
   const [errors, setErrors] = useState<Partial<Record<Tab, string>>>({});
@@ -444,7 +448,7 @@ export function IcebergExplorer() {
   useEffect(() => {
     setResults({});
     setErrors({});
-    setActiveTab("schema");
+    setActiveTab("data");
   }, [table?.catalog, table?.schema, table?.table]);
 
   if (!table) return null;
@@ -530,9 +534,15 @@ export function IcebergExplorer() {
               <>
                 <div className="iceberg-row-count">
                   {currentResult.row_count} {currentResult.row_count === 1 ? "row" : "rows"}
+                  {activeTab === "data" && currentResult.row_count >= 1000 && (
+                    <span className="iceberg-elapsed"> · preview: first 1000</span>
+                  )}
                   <span className="iceberg-elapsed">{currentResult.elapsed_ms}ms</span>
                 </div>
-                <MetaTable result={currentResult} />
+                {activeTab === "data"
+                  ? <DataGrid result={currentResult} />
+                  : <MetaTable result={currentResult} />
+                }
               </>
             )}
           </>

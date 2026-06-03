@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { X, FileText, AlertCircle } from "lucide-react";
+import { X, FileText, AlertCircle, Plus, Loader } from "lucide-react";
 import { useParquetStore } from "../../store/parquetStore";
 import { DataGrid } from "../Results/DataGrid";
 import type { ParquetMeta, SchemaColumnInfo, RowGroupInfo } from "../../types";
 
-type Tab = "data" | "schema" | "fileinfo";
+type ContentTab = "data" | "schema" | "fileinfo";
 
-const TABS: { id: Tab; label: string }[] = [
+const CONTENT_TABS: { id: ContentTab; label: string }[] = [
   { id: "data",     label: "Data" },
   { id: "schema",   label: "Schema" },
   { id: "fileinfo", label: "File Info" },
@@ -51,7 +51,6 @@ function FileInfoTab({ meta }: { meta: ParquetMeta }) {
 
   return (
     <div className="pq-fileinfo">
-      {/* Top stats */}
       <div className="pq-stats-grid">
         <div className="pq-stat">
           <span className="pq-stat-label">Total rows</span>
@@ -77,7 +76,6 @@ function FileInfoTab({ meta }: { meta: ParquetMeta }) {
         )}
       </div>
 
-      {/* Row groups */}
       <div className="pq-section-title">Row Groups</div>
       {meta.row_groups.map((rg: RowGroupInfo, i) => (
         <div key={i} className="pq-rg">
@@ -106,9 +104,10 @@ function FileInfoTab({ meta }: { meta: ParquetMeta }) {
                 </thead>
                 <tbody>
                   {rg.columns.map((col) => {
-                    const ratio = col.uncompressed_bytes > 0
-                      ? ((1 - col.compressed_bytes / col.uncompressed_bytes) * 100).toFixed(1)
-                      : null;
+                    const ratio =
+                      col.uncompressed_bytes > 0
+                        ? ((1 - col.compressed_bytes / col.uncompressed_bytes) * 100).toFixed(1)
+                        : null;
                     return (
                       <tr key={col.name} className="pq-tr">
                         <td className="pq-td pq-td--name">{col.name}</td>
@@ -138,92 +137,128 @@ function FileInfoTab({ meta }: { meta: ParquetMeta }) {
 }
 
 export function ParquetViewer() {
-  const { openFile, isLoading, error, close } = useParquetStore();
-  const [activeTab, setActiveTab] = useState<Tab>("data");
+  const { tabs, activeTabId, closeTab, setActiveTab, pickAndOpen } = useParquetStore();
+  // Track which content tab is active per parquet file
+  const [contentTabs, setContentTabs] = useState<Record<string, ContentTab>>({});
 
-  if (isLoading) {
-    return (
-      <div className="pq-viewer pq-viewer--loading">
-        <span className="spinner" />
-        <span>Reading Parquet file…</span>
-      </div>
-    );
-  }
+  const activeTab = tabs.find((t) => t.id === activeTabId) ?? null;
+  const contentTab: ContentTab = (activeTabId ? contentTabs[activeTabId] : undefined) ?? "data";
 
-  if (error) {
-    return (
-      <div className="pq-viewer pq-viewer--error">
-        <AlertCircle size={18} />
-        <div>
-          <div className="pq-error-title">Failed to open file</div>
-          <pre className="pq-error-body">{error}</pre>
-        </div>
-        <button className="iceberg-close-btn" onClick={close}><X size={14} /></button>
-      </div>
-    );
-  }
+  const setContentTab = (tab: ContentTab) => {
+    if (activeTabId) setContentTabs((prev) => ({ ...prev, [activeTabId]: tab }));
+  };
 
-  if (!openFile) return null;
-
-  const { result, meta } = openFile;
+  if (tabs.length === 0) return null;
 
   return (
     <div className="pq-viewer">
-      {/* Header */}
-      <div className="iceberg-header">
-        <div className="iceberg-breadcrumb">
-          <FileText size={13} className="tree-icon tree-icon--table" />
-          <span className="iceberg-crumb iceberg-crumb--table" title={meta.path}>
-            {meta.file_name}
-          </span>
-          <span className="iceberg-sep">·</span>
-          <span className="iceberg-crumb iceberg-crumb--catalog">
-            {fmt_bytes(meta.file_size_bytes)}
-          </span>
-          <span className="iceberg-sep">·</span>
-          <span className="iceberg-crumb iceberg-crumb--catalog">
-            {meta.num_rows.toLocaleString()} rows
-          </span>
-          <span className="iceberg-sep">·</span>
-          <span className="iceberg-crumb iceberg-crumb--catalog">
-            {result.elapsed_ms}ms
-          </span>
-        </div>
-        <button className="iceberg-close-btn" onClick={close} title="Close">
-          <X size={14} />
+      {/* ── File tab bar ── */}
+      <div className="pq-file-tabbar">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`query-tab${tab.id === activeTabId ? " query-tab--active" : ""}`}
+            onClick={() => setActiveTab(tab.id)}
+            title={tab.path}
+          >
+            <FileText size={11} />
+            <span className="pq-filetab-name">{tab.fileName}</span>
+            {tab.isLoading && <Loader size={10} className="spinning" />}
+            <span
+              className="tab-close"
+              role="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                closeTab(tab.id);
+              }}
+            >
+              <X size={10} />
+            </span>
+          </button>
+        ))}
+        <button className="tab-add-btn" onClick={pickAndOpen} title="Open .parquet file">
+          <Plus size={14} />
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="iceberg-tabs">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            className={`iceberg-tab${activeTab === t.id ? " iceberg-tab--active" : ""}`}
-            onClick={() => setActiveTab(t.id)}
-          >
-            {t.label}
-            {t.id === "data" && (
-              <span className="pq-tab-count">
-                {result.row_count < meta.num_rows
-                  ? `${result.row_count.toLocaleString()} / ${meta.num_rows.toLocaleString()}`
-                  : result.row_count.toLocaleString()}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {/* ── Active tab content ── */}
+      {activeTab && (
+        <div className={`pq-active-content${activeTab.isLoading ? " pq-viewer--loading" : activeTab.error ? " pq-viewer--error" : ""}`}>
+          {activeTab.isLoading ? (
+            <>
+              <span className="spinner" />
+              <span>Reading {activeTab.fileName}…</span>
+            </>
+          ) : activeTab.error ? (
+            <>
+              <AlertCircle size={18} />
+              <div>
+                <div className="pq-error-title">Failed to open file</div>
+                <pre className="pq-error-body">{activeTab.error}</pre>
+              </div>
+              <button className="iceberg-close-btn" onClick={() => closeTab(activeTab.id)}>
+                <X size={14} />
+              </button>
+            </>
+          ) : activeTab.preview ? (
+            <>
+              {/* Header */}
+              <div className="iceberg-header">
+                <div className="iceberg-breadcrumb">
+                  <FileText size={13} className="tree-icon tree-icon--table" />
+                  <span className="iceberg-crumb iceberg-crumb--table" title={activeTab.preview.meta.path}>
+                    {activeTab.preview.meta.file_name}
+                  </span>
+                  <span className="iceberg-sep">·</span>
+                  <span className="iceberg-crumb iceberg-crumb--catalog">
+                    {fmt_bytes(activeTab.preview.meta.file_size_bytes)}
+                  </span>
+                  <span className="iceberg-sep">·</span>
+                  <span className="iceberg-crumb iceberg-crumb--catalog">
+                    {activeTab.preview.meta.num_rows.toLocaleString()} rows
+                  </span>
+                  <span className="iceberg-sep">·</span>
+                  <span className="iceberg-crumb iceberg-crumb--catalog">
+                    {activeTab.preview.result.elapsed_ms}ms
+                  </span>
+                </div>
+              </div>
 
-      {/* Content */}
-      <div className="pq-content">
-        {activeTab === "data" && (
-          result.rows.length > 0
-            ? <DataGrid result={result} />
-            : <div className="iceberg-empty">No rows in this file</div>
-        )}
-        {activeTab === "schema" && <SchemaTab cols={meta.schema_columns} />}
-        {activeTab === "fileinfo" && <FileInfoTab meta={meta} />}
-      </div>
+              {/* Content sub-tabs */}
+              <div className="iceberg-tabs">
+                {CONTENT_TABS.map((t) => (
+                  <button
+                    key={t.id}
+                    className={`iceberg-tab${contentTab === t.id ? " iceberg-tab--active" : ""}`}
+                    onClick={() => setContentTab(t.id)}
+                  >
+                    {t.label}
+                    {t.id === "data" && (
+                      <span className="pq-tab-count">
+                        {activeTab.preview!.result.row_count < activeTab.preview!.meta.num_rows
+                          ? `${activeTab.preview!.result.row_count.toLocaleString()} / ${activeTab.preview!.meta.num_rows.toLocaleString()}`
+                          : activeTab.preview!.result.row_count.toLocaleString()}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Content */}
+              <div className="pq-content">
+                {contentTab === "data" &&
+                  (activeTab.preview.result.rows.length > 0 ? (
+                    <DataGrid result={activeTab.preview.result} />
+                  ) : (
+                    <div className="iceberg-empty">No rows in this file</div>
+                  ))}
+                {contentTab === "schema" && <SchemaTab cols={activeTab.preview.meta.schema_columns} />}
+                {contentTab === "fileinfo" && <FileInfoTab meta={activeTab.preview.meta} />}
+              </div>
+            </>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
