@@ -430,17 +430,20 @@ input, select { font-family: var(--font-sans); }
   flex: 1;
   overflow: hidden;
   min-height: 0;
+  outline: none;
 }
 
 .data-grid-wrapper {
   display: flex;
   flex-direction: column;
+  height: 100%;
   overflow: hidden;
   min-width: 0;
 }
 
+.data-grid-header-row { display: grid; }
+
 .data-grid-header {
-  display: grid;
   background: var(--bg-toolbar);
   border-bottom: 0.5px solid var(--border-strong);
   position: sticky;
@@ -505,16 +508,16 @@ input, select { font-family: var(--font-sans); }
 
 /* ===== Row Detail Panel ===== */
 .row-detail-panel {
-  width: 320px;
-  min-width: 240px;
-  max-width: 480px;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   border-left: 0.5px solid var(--border-strong);
   background: var(--bg-content);
   overflow: hidden;
-  flex-shrink: 0;
 }
+.row-detail-actions { display: flex; align-items: center; gap: 2px; }
+.row-detail-index { font-weight: 400; color: var(--text-tertiary); margin-left: 4px; }
 
 .row-detail-header {
   display: flex;
