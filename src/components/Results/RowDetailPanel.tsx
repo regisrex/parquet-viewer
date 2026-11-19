@@ -1,22 +1,44 @@
 import { useState } from "react";
-import { X, Copy, Check } from "lucide-react";
+import { X, Copy, Check, Maximize2, Minimize2 } from "lucide-react";
 import type { TrinoColumn } from "../../types";
 import { tryParseJson } from "../../lib/format";
 
 interface RowDetailPanelProps {
   row: Array<string | number | boolean | null>;
+  rowIndex: number;
   columns: TrinoColumn[];
+  isMaximized: boolean;
+  onToggleMaximize: () => void;
   onClose: () => void;
 }
 
-export function RowDetailPanel({ row, columns, onClose }: RowDetailPanelProps) {
+export function RowDetailPanel({
+  row,
+  rowIndex,
+  columns,
+  isMaximized,
+  onToggleMaximize,
+  onClose,
+}: RowDetailPanelProps) {
   return (
     <div className="row-detail-panel">
       <div className="row-detail-header">
-        <span className="row-detail-title">Row detail</span>
-        <button className="icon-btn" onClick={onClose} title="Close (Esc)">
-          <X size={14} />
-        </button>
+        <span className="row-detail-title">
+          Row detail <span className="row-detail-index">#{(rowIndex + 1).toLocaleString()}</span>
+        </span>
+        <div className="row-detail-actions">
+          <button
+            className="icon-btn"
+            onClick={onToggleMaximize}
+            title={isMaximized ? "Restore panel size" : "Expand panel"}
+            aria-label={isMaximized ? "Restore panel size" : "Expand panel"}
+          >
+            {isMaximized ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+          </button>
+          <button className="icon-btn" onClick={onClose} title="Close (Esc)" aria-label="Close row detail">
+            <X size={14} />
+          </button>
+        </div>
       </div>
       <div className="row-detail-body">
         {columns.map((col, i) => {

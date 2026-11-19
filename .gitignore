@@ -15,7 +15,6 @@ src-tauri/gen/
 Thumbs.db
 
 # Editor
-.vscode/
 .idea/
 *.swp
 .claude/
